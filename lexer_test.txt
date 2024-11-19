@@ -5,4 +5,4 @@ SYMBOL: SYMBOL | EPSILON | epsiLon | Epsilon;
 bb:a1 b2; c3:d4 | EPSILON;
 p: x y | ppso | eepsilon;     z: w | epsilon  ;
 O: A B;    C: D | Epsilon  ;
-++P: C | EEpSion | epsilon;
+P: C | #EpSion | epsilon;

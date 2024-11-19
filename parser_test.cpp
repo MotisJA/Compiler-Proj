@@ -1,5 +1,6 @@
+
 #include "lexer.h"
-#include "paser.h"
+#include "parser.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -28,9 +29,9 @@ void runTest(const std::string& input) {
 }
 
 int main() {
-    std::ifstream testFile("paser_test.txt");
+    std::ifstream testFile("parser_test.txt");
     if (!testFile) {
-        std::cerr << "Error: Cannot open file paser_test.txt" << std::endl;
+        std::cerr << "Error: Cannot open file parser_test.txt" << std::endl;
         return 1;
     }
 

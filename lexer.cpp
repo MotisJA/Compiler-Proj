@@ -52,11 +52,9 @@ std::vector<Token> Lexer::tokenize() {
             std::cerr << "Error: Unknown token \"" << token.value << "\" at position " << pos << std::endl;
             exit(EXIT_FAILURE);
         }
-        if (token.type != EOF_TOKEN) {
-            tokens.push_back(token);
-        }
+        tokens.push_back(token);
     }
-    // tokens.push_back({EOF_TOKEN, ""});
+    tokens.push_back({EOF_TOKEN, ""});
     return tokens;
 }
 

@@ -36,7 +36,7 @@ void Parser::ProductionListPrime() {
             std::cerr << "Error: Expected ';' after ProductionSet, but got '" << peek().value << "'" << std::endl;
             exit(EXIT_FAILURE);
         }
-    } else if (!isEOF()) {
+    } else if (!match(EOF_TOKEN)) {
         std::cout << pos << std::endl;
         std::cout << tokens.size() << std::endl;
         // 递归终点：当不再匹配SYMBOL时，递归终止

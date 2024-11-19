@@ -1,20 +1,32 @@
+# Prerequisites
+*.d
 
-# 编译生成的文件
+# Compiled Object files
+*.slo
+*.lo
 *.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
 *.exe
-
-# 生成的目标文件
-compiler
-lexer_test
-paser_test
-
-# 调试文件
-*.gdb
-
-# 临时文件
-*.tmp
-*.log
-
-# 操作系统生成的文件
-.DS_Store
-Thumbs.db
+*.out
+*.app

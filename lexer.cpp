@@ -56,7 +56,7 @@ std::vector<Token> Lexer::tokenize() {
             tokens.push_back(token);
         }
     }
-    tokens.push_back({EOF_TOKEN, ""});
+    // tokens.push_back({EOF_TOKEN, ""});
     return tokens;
 }
 

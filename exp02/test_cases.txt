@@ -1,0 +1,20 @@
+
+Simple Production
+S : a ;
+---
+Multiple Productions
+S : A b ;
+A : c | d ;
+---
+Epsilon Production
+S : A B ;
+A : a | EPSILON ;
+B : b ;
+---
+Complex Grammar
+E : T Ep ;
+Ep : plus T Ep | EPSILON ;
+T : F Tp ;
+Tp : multi F Tp | EPSILON ;
+F : c E c | id s | Epsilon;
+---

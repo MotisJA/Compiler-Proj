@@ -7,8 +7,8 @@
 
 void printUsage() {
     std::cout << "Usage: \n"
-              << "  parser        - Enter grammar input mode\n"
-              << "  parser [options] - Show analysis tables\n"
+              << "  ./parser           - Enter grammar input mode\n"
+              << "  ./parser [options] - Show analysis tables\n"
               << "\nOptions:\n"
               << "  -p  Print productions\n"
               << "  -f  Print FIRST sets\n"
@@ -32,10 +32,13 @@ void processFile(const std::string& filename) {
 
     Lexer lexer(content);
     std::vector<Token> tokens = lexer.tokenize();
-    tokens.push_back({EOF_TOKEN, ""}); // 添加EOF标记
 
     LL1Parser parser;
-    parser.parse(tokens);
+    auto ast = parser.parse(tokens);
+    if (ast) {
+        std::cout << "\nGenerated Abstract Syntax Tree:\n";
+        ast->print();
+    }
 }
 
 void processInput() {
@@ -51,22 +54,21 @@ void processInput() {
     if (!content.empty()) {
         Lexer lexer(content);
         std::vector<Token> tokens = lexer.tokenize();
-        // tokens.push_back({EOF_TOKEN, ""});
 
         LL1Parser parser;
-        parser.parse(tokens);
+        auto ast = parser.parse(tokens);
+        if (ast) {
+            std::cout << "\nGenerated Abstract Syntax Tree:\n";
+            ast->print();
+        }
     }
 }
 
 int main(int argc, char* argv[]) {
-    // 设置控制台输出编码为UTF-8
-    SetConsoleOutputCP(CP_UTF8);
-
     LL1TableGenerator generator;
 
     if (argc == 1) {
         // 无参数时直接进入输入模式
-        std::cout << "Enter grammar (end with an empty line):\n";
         processInput();
     } else if (argc == 2) {
         // 有参数时检查是否为选项

@@ -6,11 +6,12 @@
 #include <vector>
 #include "LL1TableGenerator.h"
 #include "lexer.h"
+#include "ASTNode.h"
 
 class LL1Parser {
 public:
     LL1Parser();
-    void parse(const std::vector<Token>& tokenStream);
+    std::shared_ptr<ASTNode> parse(const std::vector<Token>& tokenStream);
 
 private:
     std::stack<std::string> parseStack;
@@ -21,6 +22,8 @@ private:
     
     // 将TokenType转换为分析表中使用的终结符字符串
     std::string tokenTypeToString(TokenType type) const;
+    std::shared_ptr<ASTNode> currentNode;
+    std::stack<std::shared_ptr<ASTNode>> nodeStack;
 };
 
 #endif // LL1PARSER_H

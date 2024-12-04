@@ -2,6 +2,7 @@
 #include <iostream>
 #include <unordered_set>
 #include <algorithm>
+#include <iomanip>
 
 LL1TableGenerator::LL1TableGenerator() {
     // 初始化产生式
@@ -9,15 +10,15 @@ LL1TableGenerator::LL1TableGenerator() {
         {"Grammar", {"ProductionList"}},
         {"ProductionList", {"ProductionSet", "SEMICOLON", "ProductionList'"}},
         {"ProductionList'", {"ProductionSet", "SEMICOLON", "ProductionList'"}},
-        {"ProductionList'", {"ε"}},
+        {"ProductionList'", {"#"}},
         {"ProductionSet", {"SYMBOL", "DERIVES", "RightHandSide", "ProductionSet'"}},
         {"ProductionSet'", {"ALSODERIVES", "RightHandSide", "ProductionSet'"}},
-        {"ProductionSet'", {"ε"}},
+        {"ProductionSet'", {"#"}},
         {"RightHandSide", {"SymbolList"}},
         {"RightHandSide", {"EPSILON"}},
         {"SymbolList", {"SYMBOL", "SymbolList'"}},
         {"SymbolList'", {"SYMBOL", "SymbolList'"}},
-        {"SymbolList'", {"ε"}}
+        {"SymbolList'", {"#"}}
     };
     // 初始化非终结符和终结符
     nonTerminals = {
@@ -44,7 +45,7 @@ void LL1TableGenerator::computeFirstSets() {
     for (const auto& [terminal, _] : terminals) {
         firstSets[terminal].insert(terminal); // FIRST of terminal is itself
     }
-    firstSets["ε"].insert("ε"); // FIRST of ε is ε
+    firstSets["#"].insert("#"); // FIRST of # is #
     for (const auto& [nonTerminal, _] : nonTerminals) {
         firstSets[nonTerminal]; // Ensure every non-terminal has an entry
     }
@@ -63,11 +64,11 @@ void LL1TableGenerator::computeFirstSets() {
             while (i < rhs.size()) {
                 const std::string& symbol = rhs[i];
                 for (const auto& firstSymbol : firstSets[symbol]) {
-                    if (firstSymbol != "ε") {
+                    if (firstSymbol != "#") {
                         rhsFirstSet.insert(firstSymbol);
                     }
                 }
-                if (firstSets[symbol].count("ε") > 0) {
+                if (firstSets[symbol].count("#") > 0) {
                     i++;
                 } else {
                     break;
@@ -75,7 +76,7 @@ void LL1TableGenerator::computeFirstSets() {
             }
 
             if (i == rhs.size()) {
-                rhsFirstSet.insert("ε");
+                rhsFirstSet.insert("#");
             }
 
             size_t oldSize = firstSets[nonTerminal].size();
@@ -110,9 +111,9 @@ void LL1TableGenerator::computeFollowSets() {
                     size_t oldSize = followSets[symbol].size();
                     followSets[symbol].insert(trailer.begin(), trailer.end());
                     // 更新TRAILER
-                    if (firstSets[symbol].count("ε") > 0) {
+                    if (firstSets[symbol].count("#") > 0) {
                         trailer.insert(firstSets[symbol].begin(), firstSets[symbol].end());
-                        trailer.erase("ε");
+                        trailer.erase("#");
                     } else {
                         trailer = firstSets[symbol];
                     }
@@ -120,7 +121,7 @@ void LL1TableGenerator::computeFollowSets() {
                     if (followSets[symbol].size() > oldSize) {
                         changed = true;
                     }
-                // 如果是终结符，更新 TRAILER 为 FIRST(symbol)
+                // 如果是终结符，更�� TRAILER 为 FIRST(symbol)
                 } else {
                     // If terminal, update TRAILER to be FIRST(symbol)
                     trailer.clear();
@@ -138,27 +139,27 @@ void LL1TableGenerator::computeFirstPlusSets() {
         
         std::unordered_set<std::string> firstPlus;
         bool allDeriveEmpty = true;
-        // 如果右侧为空(ε)，直接加入FOLLOW集
-        if (rhs.size() == 1 && rhs[0] == "ε") {
+        // 如果右侧为空(#)，直接加入FOLLOW集
+        if (rhs.size() == 1 && rhs[0] == "#") {
             firstPlus.insert(followSets[nonTerminal].begin(), followSets[nonTerminal].end());
         } else {
             // 依次计算右侧符号的FIRST集
             for (const auto& symbol : rhs) {
                 const auto& firstSet = firstSets[symbol];
                 
-                // 加入除ε之外的所有符号
+                // 加入除#之外的所有符号
                 for (const auto& term : firstSet) {
-                    if (term != "ε") {
+                    if (term != "#") {
                         firstPlus.insert(term);
                     }
                 }
-                // 如果当前符号不能推导出ε，终止循环
-                if (firstSet.find("ε") == firstSet.end()) {
+                // 如果当前符号不能推导出#，终止循环
+                if (firstSet.find("#") == firstSet.end()) {
                     allDeriveEmpty = false;
                     break;
                 }
             }
-            // 如果所有符号都可以推导出ε，加入FOLLOW集
+            // 如果所有符号都可以推导出#，加入FOLLOW集
             if (allDeriveEmpty) {
                 firstPlus.insert(followSets[nonTerminal].begin(), followSets[nonTerminal].end());
             }
@@ -191,6 +192,7 @@ void LL1TableGenerator::computeParsingTable() {
     }
 }
 
+/// @brief 下面的函数均用于打印分析表格
 void LL1TableGenerator::printProductions() const {
     // 打印产生式
     std::cout << "Productions:\n";
@@ -199,7 +201,7 @@ void LL1TableGenerator::printProductions() const {
         for (const auto& symbol : productions[i].second) {
             std::cout << symbol << " ";
         }
-        std::cout << ";\n";
+        std::cout << ";" << std::endl;
     }
 }
 
@@ -236,30 +238,64 @@ void LL1TableGenerator::printFirstPlusSets() {
     }
 }
 
+/// @brief 以下函数均用于打印LL1分析表和调整其格式
 void LL1TableGenerator::printParsingTable() {
-    // 打印LL(1)分析表格
-    std::cout << "LL(1) Parsing Table:\n";
-    std::cout << "NonTerminal\\Terminal";
-    for (const auto& terminal : terminals) {
-        std::cout << "\t" << terminal.first;
+    // 创建有序的非终结符和终结符列表
+    std::vector<std::pair<std::string, int>> sortedNonTerminals(nonTerminals.begin(), nonTerminals.end());
+    std::vector<std::pair<std::string, int>> sortedTerminals(terminals.begin(), terminals.end());
+    
+    // 按照值排序
+    std::sort(sortedNonTerminals.begin(), sortedNonTerminals.end(),
+              [](const auto& a, const auto& b) { return a.second < b.second; });
+    std::sort(sortedTerminals.begin(), sortedTerminals.end(),
+              [](const auto& a, const auto& b) { return a.second < b.second; });
+
+    // 计算每列的最大宽度
+    std::vector<size_t> columnWidths(terminals.size() + 1, 0);
+    columnWidths[0] = std::string("NonTerminal").length();
+    
+    // 计算非终结符列的宽度
+    for (const auto& [name, _] : sortedNonTerminals) {
+        columnWidths[0] = std::max(columnWidths[0], name.length());
+    }
+
+    // 计算终结符列的宽度
+    size_t col = 1;
+    for (const auto& [term, _] : sortedTerminals) {
+        columnWidths[col] = std::max(term.length(), size_t(3));  // 至少3个字符宽
+        col++;
+    }
+
+    // 打印表头
+    std::cout << std::left << std::setw(columnWidths[0]) << "NonTerminal";
+    col = 1;
+    for (const auto& [term, _] : sortedTerminals) {
+        std::cout << " | " << std::setw(columnWidths[col++]) << term;
     }
     std::cout << "\n";
-    for (const auto& nonTerminal : nonTerminals) {
-        std::cout << nonTerminal.first;
-        for (const auto& terminal : terminals) {
-            int productionIndex = parsingTable[nonTerminal.second][terminal.second];
-            if (productionIndex != -1) {
-                std::cout << "\t" << productionIndex;
-            } else {
-                std::cout << "\t" << "-";
-            }
+
+    // 打印分隔线
+    for (size_t i = 0; i < columnWidths[0]; ++i) std::cout << "-";
+    for (size_t i = 1; i < columnWidths.size(); ++i) {
+        std::cout << "-+-";
+        for (size_t j = 0; j < columnWidths[i]; ++j) std::cout << "-";
+    }
+    std::cout << "\n";
+
+    // 打印表内容
+    for (const auto& [nonTerm, nIndex] : sortedNonTerminals) {
+        std::cout << std::left << std::setw(columnWidths[0]) << nonTerm;
+        col = 1;
+        for (const auto& [term, tIndex] : sortedTerminals) {
+            int productionIndex = parsingTable[nIndex][tIndex];
+            std::string cell = (productionIndex != -1) ? std::to_string(productionIndex) : "-";
+            std::cout << " | " << std::setw(columnWidths[col++]) << cell;
         }
         std::cout << "\n";
     }
 }
 
-int LL1TableGenerator::getParsingTableEntry(const std::string& nonTerminal, 
-                                          const std::string& terminal) const {
+int LL1TableGenerator::getParsingTableEntry(const std::string& nonTerminal, const std::string& terminal) const {
     auto nonTermIt = nonTerminals.find(nonTerminal);
     auto termIt = terminals.find(terminal);
     
@@ -269,20 +305,9 @@ int LL1TableGenerator::getParsingTableEntry(const std::string& nonTerminal,
     return -1;
 }
 
-std::pair<std::string, std::vector<std::string>> 
-LL1TableGenerator::getProduction(int index) const {
+std::pair<std::string, std::vector<std::string>> LL1TableGenerator::getProduction(int index) const {
     if (index >= 0 && static_cast<size_t>(index) < productions.size()) {
         return productions[index];
     }
     return {"", {}};
 }
-
-// int main(){
-//     LL1TableGenerator generator;
-//     generator.printProductions();
-//     generator.printFirstSets();
-//     generator.printFollowSets();
-//     generator.printFirstPlusSets();
-//     generator.printParsingTable();
-//     return 0;
-// }

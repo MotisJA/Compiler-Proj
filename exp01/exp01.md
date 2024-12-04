@@ -4,15 +4,11 @@
 
 你的程序需要理解此文法，来完成对于给定输入的语法分析。请注意，这一文法是存在左递归的。你需要对文法做变换，消除左递归，而后完成自上而下的递归下降语法分析。文法变换可以手动完成，也可以通过你编写的程序完成。后者是加分项。词法分析表中所有包含全部大写字母的符号（比如SEMICOLON）表示终结符，其余符号为非终结符。在这一文法规则下，输入的字（word）之间是可以由空白字符相连的。空白字符包括空格（blanks），制表符（tab characters），行终止符（end-of-line）。
 
-Grammar        →  ProductionList
-
-ProductionList →  ProductionSet SEMICOLON  |  ProductionList ProductionSet SEMICOLON
-
-ProductionSet  →  SYMBOL DERIVES RightHandSide  |  ProductionSet ALSODERIVES RightHandSide
-
-RightHandSide  →  SymbolList  |  EPSILON
-
-SymbolList     →  SymbolList SYMBOL  |  SYMBOL
+Grammar        :  ProductionList ;
+ProductionList :  ProductionSet SEMICOLON  |  ProductionList ProductionSet SEMICOLON ;
+ProductionSet  :  SYMBOL DERIVES RightHandSide  |  ProductionSet ALSODERIVES RightHandSide ;
+RightHandSide  :  SymbolList  |  EPSILON ;
+SymbolList     :  SymbolList SYMBOL  |  SYMBOL ;
 
 ## 消除左递归后的文法
 

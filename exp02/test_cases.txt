@@ -20,4 +20,4 @@ F : c E c | id s | Epsilon;
 ---
 Error Grammar
 E : Q E ;
-Q : Epsilon | Epsilon | Q ;
+Q : | Epsilon | Epsilon | Q ;

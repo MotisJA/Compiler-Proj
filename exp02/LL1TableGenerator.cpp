@@ -43,21 +43,19 @@ LL1TableGenerator::LL1TableGenerator() {
 void LL1TableGenerator::computeFirstSets() {
     // 初始化 FIRST sets
     for (const auto& [terminal, _] : terminals) {
-        firstSets[terminal].insert(terminal); // FIRST of terminal is itself
+        firstSets[terminal].insert(terminal);
     }
-    firstSets["#"].insert("#"); // FIRST of # is #
+    firstSets["#"].insert("#");
     for (const auto& [nonTerminal, _] : nonTerminals) {
-        firstSets[nonTerminal]; // Ensure every non-terminal has an entry
+        firstSets[nonTerminal];
     }
 
     bool changed = true;
     while (changed) {
         changed = false;
-
         for (const auto& production : productions) {
             const std::string& nonTerminal = production.first;
             const std::vector<std::string>& rhs = production.second;
-
             std::unordered_set<std::string> rhsFirstSet;
             size_t i = 0;
 
@@ -92,7 +90,7 @@ void LL1TableGenerator::computeFirstSets() {
 void LL1TableGenerator::computeFollowSets() {
     // 初始化 FOLLOW sets
     for (const auto& [nonTerminal, _] : nonTerminals) {
-        followSets[nonTerminal]; // Ensure every non-terminal has an entry
+        followSets[nonTerminal];
     }
     followSets["Grammar"].insert("EOF_TOKEN");
     // 遍历每个产生式，计算 FOLLOW 集合
@@ -121,9 +119,8 @@ void LL1TableGenerator::computeFollowSets() {
                     if (followSets[symbol].size() > oldSize) {
                         changed = true;
                     }
-                // 如果是终结符，更�� TRAILER 为 FIRST(symbol)
+                // 如果是终结符，更新 TRAILER 为 FIRST(symbol)
                 } else {
-                    // If terminal, update TRAILER to be FIRST(symbol)
                     trailer.clear();
                     trailer.insert(symbol);
                 }

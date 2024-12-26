@@ -1,0 +1,30 @@
+loadI 1000 => r1      // 内存地址1000
+loadI 1 => r2         // a = 1
+store r2 => r1        // 存储a
+
+loadI 1001 => r3      // 内存地址1001
+loadI 2 => r4         // b = 2
+store r4 => r3        // 存储b
+
+loadI 1002 => r5      // 内存地址1002
+loadI 5 => r6         // c = 5
+store r6 => r5        // 存储c
+
+loadI 1003 => r7      // 内存地址1003
+loadI 3 => r8         // d = 3
+store r8 => r7        // 存储d
+
+load r1 => r20        // 加载a
+load r3 => r21        // 加载b
+add r20, r21 => r22   // a + b
+
+load r5 => r23        // 加载c
+load r7 => r24        // 加载d
+sub r23, r24 => r25   // c - d
+
+mult r22, r25 => r26  // (a + b) * (c - d)
+
+loadI 1004 => r27     // 结果存储地址
+store r26 => r27      // 存储结果
+
+output 1004           // 输出结果

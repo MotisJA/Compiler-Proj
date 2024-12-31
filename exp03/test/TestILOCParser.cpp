@@ -1,6 +1,7 @@
 #include "TestILOCParser.h"
 #include <iostream>
 #include <cassert>
+#include <iomanip>
 
 void TestILOCParser::runAllTests() {
     runTest("LoadI Test", testLoadI);
@@ -9,6 +10,8 @@ void TestILOCParser::runAllTests() {
     runTest("Arithmetic Test", testArithmetic);
     runTest("Output Test", testOutput);
     runTest("Invalid Instructions Test", testInvalidInstructions);
+    runTest("Program Block Test", testProgramBlock);
+    std::cout << "\nAll basic tests completed.\n" << std::endl;
 }
 
 void TestILOCParser::runTest(const std::string& testName, std::function<void()> testFunc) {
@@ -81,4 +84,68 @@ void TestILOCParser::testInvalidInstructions() {
     } catch (const ILOCParseException&) {
         // 预期的异常
     }
+}
+
+void TestILOCParser::testProgramBlock() {
+    std::vector<std::string> testProgram = {
+        "loadI 0 => r1",
+        "loadI 1 => r2",
+        "add r1,r2 => r3",
+        "store r3 => r1",
+        "output 0"
+    };
+
+    for (const auto& line : testProgram) {
+        auto inst = ILOCParser::parseLine(line);
+        assert(inst.lineNumber == 0);  // 确保基本解析正确
+    }
+}
+
+void TestILOCParser::testInputFile(const std::string& filename) {
+    try {
+        std::cout << "Parsing file: " << filename << "\n\n";
+        auto instructions = ILOCParser::parseFile(filename);
+        
+        std::cout << "Successfully parsed " << instructions.size() << " instructions:\n";
+        std::cout << std::string(50, '-') << "\n";
+        
+        for (const auto& inst : instructions) {
+            printInstruction(inst);
+        }
+        
+        std::cout << std::string(50, '-') << "\n";
+        std::cout << "Parse completed successfully.\n";
+        
+    } catch (const ILOCParseException& e) {
+        std::cerr << "Parse error at line " << e.getLine() << ": " << e.what() << std::endl;
+        throw;
+    }
+}
+
+void TestILOCParser::printInstruction(const ILOCInstruction& inst) {
+    std::cout << std::setw(4) << inst.lineNumber << ": ";
+    
+    switch (inst.opcode) {
+        case ILOCOpcode::LOADI:
+            std::cout << "loadI " << inst.immediate << " => " << inst.dest;
+            break;
+            
+        case ILOCOpcode::LOAD:
+            std::cout << "load " << inst.src1 << " => " << inst.dest;
+            break;
+            
+        case ILOCOpcode::STORE:
+            std::cout << "store " << inst.src1 << " => " << inst.dest;
+            break;
+            
+        case ILOCOpcode::OUTPUT:
+            std::cout << "output " << inst.immediate;
+            break;
+            
+        default:  // 算术操作
+            std::cout << getOpcodeStr(inst.opcode) << " " 
+                     << inst.src1 << "," << inst.src2 
+                     << " => " << inst.dest;
+    }
+    std::cout << std::endl;
 }

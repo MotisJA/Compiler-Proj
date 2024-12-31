@@ -4,6 +4,17 @@ CXXFLAGS = -std=c++14 -Wall -Wextra -I./include
 TARGET = 412alloc
 TEST_TARGET = test_412alloc
 
+# Windows和Linux环境下的可执行文件后缀
+ifeq ($(OS),Windows_NT)
+    EXE_EXT = .exe
+else
+    EXE_EXT =
+endif
+
+# 最终的可执行文件名
+FINAL_TARGET = $(TARGET)$(EXE_EXT)
+FINAL_TEST_TARGET = $(TEST_TARGET)$(EXE_EXT)
+
 # 主程序源文件
 SRCS = src/main.cpp \
        src/ILOCParser.cpp \
@@ -11,24 +22,31 @@ SRCS = src/main.cpp \
        src/BottomUpAllocator.cpp \
        src/ILOCFormatter.cpp
 
-# ILOC指令分析器测试程序源文件
-TEST_SRCS = test/test_main.cpp \
-            test/TestILOCParser.cpp \
-            src/ILOCParser.cpp
+# 测试程序源文件
+TEST_SRCS = src/ILOCParser.cpp \
+            test/test_main.cpp \
+            test/TestILOCParser.cpp
 
 .PHONY: all clean test
 
-# 测试目标优先
-test: $(TEST_TARGET)
-	./$(TEST_TARGET)
+# 默认目标改为编译主程序
+all: $(FINAL_TARGET)
 
-$(TEST_TARGET):
-	$(CXX) $(CXXFLAGS) $(TEST_SRCS) -o $@
-
-all: $(TARGET)
-
-$(TARGET):
+$(FINAL_TARGET): $(SRCS)
 	$(CXX) $(CXXFLAGS) $(SRCS) -o $@
 
+test: $(FINAL_TEST_TARGET)
+	./$(FINAL_TEST_TARGET)
+
+$(FINAL_TEST_TARGET): $(TEST_SRCS)
+	$(CXX) $(CXXFLAGS) $(TEST_SRCS) -o $@
+
+# 根据操作系统选择删除命令
+ifeq ($(OS),Windows_NT)
+    RM_CMD = del /Q /F 2>nul || ver>nul
+else
+    RM_CMD = rm -f
+endif
+
 clean:
-	rm -f $(TARGET) $(TEST_TARGET)
+	-$(RM_CMD) *.exe *.o

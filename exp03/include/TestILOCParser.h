@@ -8,6 +8,7 @@
 class TestILOCParser {
 public:
     static void runAllTests();
+    static void testInputFile(const std::string& filename);
 
 private:
     static void testLoadI();
@@ -16,6 +17,8 @@ private:
     static void testArithmetic();
     static void testOutput();
     static void testInvalidInstructions();
+    static void testProgramBlock();
+    static void printInstruction(const ILOCInstruction& inst);
     
     static void assertInstruction(const ILOCInstruction& actual, 
                                 ILOCOpcode expectedOp,

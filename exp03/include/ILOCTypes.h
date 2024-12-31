@@ -6,16 +6,32 @@
 
 // ILOC操作码枚举
 enum class ILOCOpcode {
-    LOAD,
-    LOADI,
-    STORE,
-    ADD,
-    SUB,
-    MULT,
-    LSHIFT,
-    RSHIFT,
-    OUTPUT
+    LOAD,   // load r1 => r2
+    LOADI,  // loadI x => r2
+    STORE,  // store r1 => r2
+    ADD,    // add r1,r2 => r3
+    SUB,    // sub r1,r2 => r3
+    MULT,   // mult r1,r2 => r3
+    LSHIFT, // lshift r1,r2 => r3
+    RSHIFT, // rshift r1,r2 => r3
+    OUTPUT  // output x
 };
+
+// 获取操作码的字符串表示
+inline std::string getOpcodeStr(ILOCOpcode op) {
+    switch (op) {
+        case ILOCOpcode::LOAD: return "load";
+        case ILOCOpcode::LOADI: return "loadI";
+        case ILOCOpcode::STORE: return "store";
+        case ILOCOpcode::ADD: return "add";
+        case ILOCOpcode::SUB: return "sub";
+        case ILOCOpcode::MULT: return "mult";
+        case ILOCOpcode::LSHIFT: return "lshift";
+        case ILOCOpcode::RSHIFT: return "rshift";
+        case ILOCOpcode::OUTPUT: return "output";
+        default: return "unknown";
+    }
+}
 
 // ILOC指令结构
 struct ILOCInstruction {
@@ -29,9 +45,14 @@ struct ILOCInstruction {
 
 // ILOC解析异常
 class ILOCParseException : public std::runtime_error {
+private:
+    int lineNumber;
+
 public:
-    ILOCParseException(const std::string& msg, int line) 
-        : std::runtime_error("Line " + std::to_string(line) + ": " + msg) {}
+    ILOCParseException(const std::string& message, int line) 
+        : std::runtime_error(message), lineNumber(line) {}
+
+    int getLine() const { return lineNumber; }
 };
 
 struct LivenessInfo {

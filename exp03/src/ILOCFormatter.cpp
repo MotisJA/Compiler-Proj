@@ -1,6 +1,17 @@
 #include "ILOCFormatter.h"
 
 std::string ILOCFormatter::format(const ILOCInstruction& inst) {
+    // // 验证所有寄存器编号是否合法
+    // auto validateReg = [](const std::string& reg) {
+    //     if (reg == "r0") {
+    //         throw std::runtime_error("Invalid register r0 in output");
+    //     }
+    // };
+
+    // if (!inst.src1.empty()) validateReg(inst.src1);
+    // if (!inst.src2.empty()) validateReg(inst.src2);
+    // if (!inst.dest.empty()) validateReg(inst.dest);
+
     std::string result;
     switch (inst.opcode) {
         case ILOCOpcode::LOAD:

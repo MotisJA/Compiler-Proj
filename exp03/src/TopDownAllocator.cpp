@@ -3,137 +3,172 @@
 #include <vector>
 #include <algorithm>
 #include <set>
+#include <stdexcept>
 
 std::vector<ILOCInstruction> TopDownAllocator::allocate(
     const std::vector<ILOCInstruction>& instructions,
     int k) {
     
+    if (k <= 0) {
+        throw std::invalid_argument("Number of registers must be positive");
+    }
+
+    if (instructions.empty()) {
+        return instructions;
+    }
+
     // 统计虚拟寄存器使用频率
     std::map<std::string, int> registerFrequency;
     std::set<std::string> virtualRegisters;
     
-    for (const auto& inst : instructions) {
-        if (!inst.src1.empty()) {
-            registerFrequency[inst.src1]++;
-            virtualRegisters.insert(inst.src1);
-        }
-        if (!inst.src2.empty()) {
-            registerFrequency[inst.src2]++;
-            virtualRegisters.insert(inst.src2);
-        }
-        if (!inst.dest.empty()) {
-            registerFrequency[inst.dest]++;
-            virtualRegisters.insert(inst.dest);
-        }
-    }
-
-    // 如果虚拟寄存器数量小于k，直接使用原始寄存器
-    if (virtualRegisters.size() <= static_cast<size_t>(k)) {
-        return instructions;
-    }
-
-    // 将虚拟寄存器按使用频率排序
-    std::vector<std::pair<std::string, int>> sortedRegs;
-    for (const auto& reg : registerFrequency) {
-        sortedRegs.push_back(reg);
-    }
-    std::sort(sortedRegs.begin(), sortedRegs.end(),
-        [](const auto& a, const auto& b) {
-            return a.second > b.second;
-        });
-
-    // 分配物理寄存器
-    const int F = 1; // 保留一个寄存器用于溢出
-    std::map<std::string, std::string> registerMapping;
-    for (size_t i = 0; i < sortedRegs.size() && i < static_cast<size_t>(k - F); ++i) {
-        registerMapping[sortedRegs[i].first] = "r" + std::to_string(i);
-    }
-
-    // 重写代码
-    std::vector<ILOCInstruction> result;
-    const std::string spillReg = "r" + std::to_string(k - 1); // 用于溢出的寄存器
-    int memoryOffset = 1000; // 内存起始位置
-    std::map<std::string, int> spillLocations;
-
-    for (const auto& inst : instructions) {
-        ILOCInstruction newInst = inst;
-
-        // 处理源操作数1
-        if (!inst.src1.empty()) {
-            if (registerMapping.count(inst.src1)) {
-                newInst.src1 = registerMapping[inst.src1];
-            } else {
-                // 需要从内存加载
-                if (!spillLocations.count(inst.src1)) {
-                    spillLocations[inst.src1] = memoryOffset++;
-                }
-                ILOCInstruction loadInst;
-                loadInst.opcode = ILOCOpcode::LOADI;
-                loadInst.immediate = spillLocations[inst.src1];
-                loadInst.dest = spillReg;
-                result.push_back(loadInst);
-
-                loadInst.opcode = ILOCOpcode::LOAD;
-                loadInst.src1 = spillReg;
-                loadInst.dest = spillReg;
-                result.push_back(loadInst);
-
-                newInst.src1 = spillReg;
+    try {
+        for (const auto& inst : instructions) {
+            if (!inst.src1.empty()) {
+                registerFrequency[inst.src1]++;
+                virtualRegisters.insert(inst.src1);
+            }
+            if (!inst.src2.empty()) {
+                registerFrequency[inst.src2]++;
+                virtualRegisters.insert(inst.src2);
+            }
+            if (!inst.dest.empty()) {
+                registerFrequency[inst.dest] += 2;
+                virtualRegisters.insert(inst.dest);
             }
         }
 
-        // 处理源操作数2
-        if (!inst.src2.empty()) {
-            if (registerMapping.count(inst.src2)) {
-                newInst.src2 = registerMapping[inst.src2];
-            } else {
-                // 需要从内存加载
-                if (!spillLocations.count(inst.src2)) {
-                    spillLocations[inst.src2] = memoryOffset++;
+        // 安全检查：如果没有需要分配的寄存器，直接返回
+        if (virtualRegisters.empty()) {
+            return instructions;
+        }
+
+        // 如果虚拟寄存器数量小于k，直接返回原始指令
+        if (virtualRegisters.size() <= static_cast<size_t>(k)) {
+            return instructions;
+        }
+
+        // 将寄存器使用频率信息转换为vector并排序
+        std::vector<std::pair<std::string, int>> sortedRegs(
+            registerFrequency.begin(), 
+            registerFrequency.end()
+        );
+        
+        std::sort(sortedRegs.begin(), sortedRegs.end(),
+            [](const auto& a, const auto& b) {
+                return a.second > b.second;
+            });
+
+        // 保留寄存器计算
+        const int minReserved = 1;
+        const int maxReserved = std::min(3, k - 1); // 确保不会超过可用寄存器数
+        int F = std::min(maxReserved, 
+                        std::max(minReserved, 
+                                static_cast<int>(virtualRegisters.size() * 0.1)));
+        
+        if (k <= F) {
+            F = 1;
+        }
+
+        // 创建寄存器映射
+        std::map<std::string, std::string> registerMapping;
+        for (size_t i = 0; i < sortedRegs.size() && i < static_cast<size_t>(k - F); ++i) {
+            std::string physReg = "r" + std::to_string(i + 1);
+            registerMapping[sortedRegs[i].first] = physReg;
+        }
+
+        // 初始化溢出寄存器列表
+        std::vector<std::string> spillRegs;
+        for (int i = 0; i < F; ++i) {
+            spillRegs.push_back("r" + std::to_string(k - i));
+        }
+
+        // 重写指令序列
+        std::vector<ILOCInstruction> result;
+        result.reserve(instructions.size() * 3); // 预分配足够空间
+        
+        int memoryOffset = 1000;
+        std::map<std::string, int> spillLocations;
+        std::map<std::string, std::string> currentSpillReg;
+
+        // 处理每条指令
+        for (const auto& inst : instructions) {
+            ILOCInstruction newInst = inst;
+            bool needStore = false;
+
+            // 处理源操作数
+            auto handleOperand = [&](const std::string& vreg) -> std::string {
+                if (vreg.empty()) return "";
+                
+                if (registerMapping.count(vreg)) {
+                    return registerMapping[vreg];
                 }
-                ILOCInstruction loadInst;
-                loadInst.opcode = ILOCOpcode::LOADI;
-                loadInst.immediate = spillLocations[inst.src2];
-                loadInst.dest = spillReg;
-                result.push_back(loadInst);
 
-                loadInst.opcode = ILOCOpcode::LOAD;
-                loadInst.src1 = spillReg;
-                loadInst.dest = spillReg;
-                result.push_back(loadInst);
+                // 选择溢出寄存器
+                std::string spillReg = spillRegs[0];
+                if (!result.empty() && result.back().dest == spillReg) {
+                    spillReg = spillRegs[spillRegs.size() > 1 ? 1 : 0];
+                }
 
-                newInst.src2 = spillReg;
+                // 分配内存位置
+                if (!spillLocations.count(vreg)) {
+                    spillLocations[vreg] = memoryOffset++;
+                }
+
+                // 生成加载指令
+                ILOCInstruction loadAddr;
+                loadAddr.opcode = ILOCOpcode::LOADI;
+                loadAddr.immediate = spillLocations[vreg];
+                loadAddr.dest = spillReg;
+                result.push_back(loadAddr);
+
+                ILOCInstruction loadVal;
+                loadVal.opcode = ILOCOpcode::LOAD;
+                loadVal.src1 = spillReg;
+                loadVal.dest = spillReg;
+                result.push_back(loadVal);
+
+                currentSpillReg[vreg] = spillReg;
+                return spillReg;
+            };
+
+            // 处理操作数
+            if (!inst.src1.empty()) newInst.src1 = handleOperand(inst.src1);
+            if (!inst.src2.empty()) newInst.src2 = handleOperand(inst.src2);
+            
+            if (!inst.dest.empty()) {
+                if (registerMapping.count(inst.dest)) {
+                    newInst.dest = registerMapping[inst.dest];
+                } else {
+                    newInst.dest = handleOperand(inst.dest);
+                    needStore = true;
+                }
+            }
+
+            result.push_back(newInst);
+
+            // 处理存储操作
+            if (needStore) {
+                std::string spillReg = currentSpillReg[inst.dest];
+                
+                ILOCInstruction storeAddr;
+                storeAddr.opcode = ILOCOpcode::LOADI;
+                storeAddr.immediate = spillLocations[inst.dest];
+                storeAddr.dest = spillReg;
+                result.push_back(storeAddr);
+
+                ILOCInstruction storeVal;
+                storeVal.opcode = ILOCOpcode::STORE;
+                storeVal.src1 = newInst.dest;
+                storeVal.dest = spillReg;
+                result.push_back(storeVal);
             }
         }
 
-        // 处理目标操作数
-        if (!inst.dest.empty()) {
-            if (registerMapping.count(inst.dest)) {
-                newInst.dest = registerMapping[inst.dest];
-            } else {
-                // 将结果存储到内存
-                if (!spillLocations.count(inst.dest)) {
-                    spillLocations[inst.dest] = memoryOffset++;
-                }
-                newInst.dest = spillReg;
-                result.push_back(newInst);
+        return result;
 
-                ILOCInstruction storeInst;
-                storeInst.opcode = ILOCOpcode::LOADI;
-                storeInst.immediate = spillLocations[inst.dest];
-                storeInst.dest = spillReg;
-                result.push_back(storeInst);
-
-                storeInst.opcode = ILOCOpcode::STORE;
-                storeInst.src1 = newInst.dest;
-                storeInst.dest = spillReg;
-                result.push_back(storeInst);
-                continue;
-            }
-        }
-
-        result.push_back(newInst);
+    } catch (const std::bad_alloc& e) {
+        throw std::runtime_error("Memory allocation failed during register allocation");
+    } catch (const std::exception& e) {
+        throw std::runtime_error(std::string("Register allocation failed: ") + e.what());
     }
-
-    return result;
 }

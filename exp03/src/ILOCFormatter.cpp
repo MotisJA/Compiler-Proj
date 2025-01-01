@@ -21,7 +21,7 @@ std::string ILOCFormatter::format(const ILOCInstruction& inst) {
             result = "loadI " + std::to_string(inst.immediate) + " => " + inst.dest;
             break;
         case ILOCOpcode::STORE:
-            result = "store " + inst.src1 + " => " + inst.dest;
+            result = "store " + inst.src1 + " => " + inst.src2; // 修改为使用src2
             break;
         case ILOCOpcode::ADD:
             result = "add " + inst.src1 + ", " + inst.src2 + " => " + inst.dest;

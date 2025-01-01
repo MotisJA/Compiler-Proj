@@ -69,33 +69,42 @@ int main(int argc, char* argv[]) {
             result = allocator.allocate(instructions, k);
         }
 
-        // 创建输出文件
-        std::string outputFile = inputFile + ".out";
-        std::ofstream outFile(outputFile);
-        if (!outFile.is_open()) {
-            std::cerr << "Error: Could not create output file: " << outputFile << std::endl;
+        // 创建两个输出文件
+        std::string numberedOutputFile = inputFile + ".out";
+        std::string consoleOutputFile = inputFile + ".console.out";
+        
+        std::ofstream numberedFile(numberedOutputFile);
+        std::ofstream consoleFile(consoleOutputFile);
+        
+        if (!numberedFile.is_open() || !consoleFile.is_open()) {
+            std::cerr << "Error: Could not create output files" << std::endl;
             return 1;
         }
 
         // 格式化并输出结果
         ILOCFormatter formatter;
+        
+        // 输出到控制台并写入console输出文件
         for (const auto& inst : result) {
             std::string formattedInst = formatter.format(inst);
-            
-            // 输出到控制台
             std::cout << formattedInst << std::endl;
-            
-            // 输出到文件（带原始行号）
+            consoleFile << formattedInst << std::endl;
+        }
+        
+        // 写入带行号的输出文件
+        for (const auto& inst : result) {
+            std::string formattedInst = formatter.format(inst);
             if (inst.lineNumber > 0) {
-                outFile << inst.lineNumber << ":\t" << formattedInst << std::endl;
+                numberedFile << inst.lineNumber << ":\t" << formattedInst << std::endl;
             } else {
-                // 对于新生成的指令（如溢出操作），不输出行号
-                outFile << "\t" << formattedInst << std::endl;
+                numberedFile << "\t" << formattedInst << std::endl;
             }
         }
 
-        outFile.close();
-        std::cout << "\nOutput has been written to: " << outputFile << std::endl;
+        numberedFile.close();
+        consoleFile.close();
+        std::cout << "\nNumbered output has been written to: " << numberedOutputFile << std::endl;
+        std::cout << "Console output has been written to: " << consoleOutputFile << std::endl;
 
         return 0;
     } catch (const ILOCParseException& e) {

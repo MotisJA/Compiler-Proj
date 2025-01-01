@@ -203,9 +203,9 @@ std::vector<ILOCInstruction> TopDownAllocator::allocate(
             ILOCInstruction storeVal;
             storeVal.opcode = ILOCOpcode::STORE;
             storeVal.src1 = valueReg;   // 存储的值
-            storeVal.dest = addrReg;    // 使用地址寄存器
+            storeVal.src2 = addrReg;    // 使用地址寄存器
             // storeVal.immediate = 0;
-            storeVal.src2 = "";
+            storeVal.dest = "";
             storeVal.lineNumber = inst.lineNumber;
             result.push_back(storeVal);
         }

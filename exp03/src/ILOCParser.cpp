@@ -108,12 +108,12 @@ ILOCInstruction ILOCParser::parseLine(const std::string& line, int lineNumber) {
              inst.dest = normalizeRegister(m[2]);
          }},
          
-        // store r1 => r2
+        // store r1 => r2  (修改这部分，将r2识别为src2而不是dest)
         {std::regex("store" + ws + "(" + regPat + ")" + ws + "=>" + ws + "(" + regPat + ")"),
          [&](const std::smatch& m) {
              inst.opcode = ILOCOpcode::STORE;
              inst.src1 = normalizeRegister(m[1]);
-             inst.dest = normalizeRegister(m[2]);
+             inst.src2 = normalizeRegister(m[2]); // 将第二个寄存器赋值给src2而不是dest
          }},
          
         // 算术运算: add, sub, mult, lshift, rshift

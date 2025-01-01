@@ -1,22 +1,17 @@
-loadI 0 => r1
-loadI 1 => r2
+loadI 5 => r1
+loadI 3 => r2
 loadI 2 => r3
-add r1,r2 => r1
-add r1,r2 => r2
-add r1,r2 => r3
-add r2,r3 => r1
-add r2,r3 => r2
-add r2,r3 => r3
-add r1,r3 => r1
-add r1,r3 => r2
-add r1,r3 => r3
-loadI 0 => r4
-store r1 => r4
-loadI 4 => r4
-store r2 => r4
-loadI 8 => r4
-store r3 => r4
-load r1 => r4
-output 0
-output 4
-output 8
+lshift r1, r2 => r4
+rshift r4, r3 => r5
+loadI 400 => r6
+store r5 => r6
+add r1, r2 => r7
+mult r7, r3 => r8
+loadI 500 => r6
+store r8 => r6
+loadI 600 => r6
+sub r8, r1 => r9  
+store r9 => r6
+output 400
+output 500
+output 600

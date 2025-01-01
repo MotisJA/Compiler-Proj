@@ -14,6 +14,3 @@ store r8 => r6
 output 100
 output 200
 output 300
-
-预期输出：
-230 40 600

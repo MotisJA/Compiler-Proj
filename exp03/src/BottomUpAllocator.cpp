@@ -73,9 +73,11 @@ int BottomUpAllocator::getNextUseDistance(const std::string& vr, size_t currentP
     
     auto& usage = it->second;
     
-    // 检查当前位置是否是最后一个使用位置
-    if (!usage.usePositions.empty() && 
-        usage.usePositions.back() == currentPos) {
+    // 检查当前位置是否是使用位置
+    auto currentUseIt = std::find(usage.usePositions.begin(), 
+                                usage.usePositions.end(), 
+                                currentPos);
+    if (currentUseIt != usage.usePositions.end()) {
         return 0;
     }
     

@@ -80,7 +80,7 @@ std::vector<ILOCInstruction> TopDownAllocator::allocate(
     std::vector<ILOCInstruction> result;
     result.reserve(instructions.size() * 3); // 预分配足够空间
     
-    int memoryOffset = 1000;
+    int memoryOffset = 10000;
     std::map<std::string, int> spillLocations;
     std::map<std::string, std::string> currentSpillReg;
 

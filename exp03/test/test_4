@@ -1,0 +1,46 @@
+loadI 0 => r1
+loadI 10 => r2
+loadI 20 => r3
+loadI 30 => r4
+loadI 40 => r5
+loadI 100 => r6
+loadI 104 => r7
+loadI 108 => r8
+loadI 112 => r9
+loadI 116 => r10
+add r1, r2 => r11
+sub r11, r3 => r12
+mult r12, r4 => r13
+lshift r13, r5 => r14
+rshift r14, r2 => r15
+add r15, r3 => r16
+sub r16, r4 => r17
+mult r17, r5 => r18
+lshift r18, r1 => r19
+rshift r19, r3 => r20
+add r20, r2 => r21
+sub r21, r5 => r22
+mult r22, r4 => r23
+lshift r23, r2 => r24
+rshift r24, r4 => r25
+store r11 => r6
+store r12 => r7
+store r13 => r8
+store r14 => r9
+store r15 => r10
+store r16 => r6
+store r17 => r7
+store r18 => r8
+store r19 => r9
+store r20 => r10
+store r21 => r6
+store r22 => r7
+store r23 => r8
+store r24 => r9
+store r25 => r10
+output 100
+output 104
+output 108
+output 112
+output 116
+

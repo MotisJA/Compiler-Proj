@@ -102,7 +102,7 @@ std::string BottomUpAllocator::ensure(const std::string& vr,
 
     // 分配物理寄存器并可能需要从内存加载
     std::string physReg = allocate(vr, result, currentPos, currentLine);
-    
+
     // 如果需要从内存加载
     if (memoryLoc.find(vr) != memoryLoc.end()) {
         
@@ -217,7 +217,7 @@ std::vector<ILOCInstruction> BottomUpAllocator::allocate(
     
     regClass = RegClass(k - 1);  // 预留一个寄存器用于溢出
     spillReg = "r" + std::to_string(k);
-    memOffset = 1000;  
+    memOffset = 10000;  
     memoryLoc.clear();
     
     computeVRUsages(instructions);
@@ -237,7 +237,12 @@ std::vector<ILOCInstruction> BottomUpAllocator::allocate(
         }
         
         if (!inst.dest.empty()) {
-            inst.dest = ensure(inst.dest, result, i, inst);
+            // 如果已经在物理寄存器中,直接返回
+            if (regClass.virtualToPhysical.find(inst.dest) != regClass.virtualToPhysical.end()) {
+                inst.dest = regClass.virtualToPhysical[inst.dest];
+            } else {
+                inst.dest = allocate(inst.dest, result, i, inst.lineNumber);
+            }
         }
         
         result.push_back(inst);

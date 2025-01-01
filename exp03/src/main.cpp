@@ -69,11 +69,33 @@ int main(int argc, char* argv[]) {
             result = allocator.allocate(instructions, k);
         }
 
+        // 创建输出文件
+        std::string outputFile = inputFile + ".out";
+        std::ofstream outFile(outputFile);
+        if (!outFile.is_open()) {
+            std::cerr << "Error: Could not create output file: " << outputFile << std::endl;
+            return 1;
+        }
+
         // 格式化并输出结果
         ILOCFormatter formatter;
         for (const auto& inst : result) {
-            std::cout << formatter.format(inst) << std::endl;
+            std::string formattedInst = formatter.format(inst);
+            
+            // 输出到控制台
+            std::cout << formattedInst << std::endl;
+            
+            // 输出到文件（带原始行号）
+            if (inst.lineNumber > 0) {
+                outFile << inst.lineNumber << ":\t" << formattedInst << std::endl;
+            } else {
+                // 对于新生成的指令（如溢出操作），不输出行号
+                outFile << "\t" << formattedInst << std::endl;
+            }
         }
+
+        outFile.close();
+        std::cout << "\nOutput has been written to: " << outputFile << std::endl;
 
         return 0;
     } catch (const ILOCParseException& e) {

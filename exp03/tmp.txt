@@ -1,0 +1,58 @@
+1:	loadI 5 => r3
+vr1 : r3=5
+
+2:	loadI 3 => r2
+vr2 : r2=3
+
+3:	loadI 2 => r1
+vr3 : r1=2
+
+4:	loadI 1000 => r4
+4:	store r3 => r4
+4:	lshift r3, r2 => r3
+vr1 : 1000=5
+vr4 : r3=40
+
+5:	loadI 1004 => r4
+5:	store r3 => r4
+5:	rshift r3, r1 => r3
+vr4 : 1004=40
+vr5 : r3=10
+
+6:	loadI 1008 => r4
+6:	store r1 => r4
+6:	loadI 400 => r1
+vr3 : 1008=2
+vr6 : r1=400
+
+7:	store r3 => r1
+mem(400)=10
+
+8:	loadI 1000 => r3
+8:	load r3 => r3
+8:	loadI 1012 => r4
+8:	store r2 => r4
+8:	add r3, r2 => r2
+vr1 : r3=5
+vr2 : 1012=3
+vr7 : r2=8
+
+9:	loadI 1016 => r4
+9:	store r2 => r4
+9:	loadI 1008 => r2
+9:	load r2 => r2
+9:	loadI 1008 => r4
+9:	store r2 => r4
+9:	mult r2, r2 => r2
+
+
+10:	loadI 500 => r1
+11:	store r2 => r1
+12:	loadI 600 => r1
+13:	loadI 1000 => r4
+13:	store r3 => r4
+13:	sub r2, r3 => r3
+14:	store r3 => r1
+15:	output 400
+16:	output 500
+17:	output 600

@@ -19,3 +19,5 @@ store r3 => r4
 output 0
 output 4
 output 8
+
+预期输出：

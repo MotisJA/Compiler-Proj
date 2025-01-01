@@ -66,8 +66,12 @@ protected:
     int getNextUseDistance(const std::string& vr, size_t currentPos);
     std::string ensure(const std::string& vr, std::vector<ILOCInstruction>& result, 
                       size_t currentPos);
+    std::string ensure(const std::string& vr, 
+                      std::vector<ILOCInstruction>& result,
+                      size_t currentPos,
+                      const ILOCInstruction& inst);
     std::string allocate(const std::string& vr, std::vector<ILOCInstruction>& result, 
-                        size_t currentPos);
+                        size_t currentPos, size_t lineNum);
     void free(const std::string& reg);
     void spillToMemory(const std::string& vr, const std::string& physReg, 
                       std::vector<ILOCInstruction>& result, size_t currentPos);

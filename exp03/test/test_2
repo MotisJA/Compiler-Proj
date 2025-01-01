@@ -1,0 +1,19 @@
+loadI 10 => r1
+loadI 20 => r2
+loadI 30 => r3
+mult r1, r2 => r4
+add r4, r3 => r5 
+loadI 100 => r6
+store r5 => r6   
+loadI 200 => r6
+add r1, r3 => r7 
+store r7 => r6   
+loadI 300 => r6
+mult r2, r3 => r8
+store r8 => r6   
+output 100
+output 200
+output 300
+
+预期输出：
+230 40 600

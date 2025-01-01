@@ -72,6 +72,13 @@ int BottomUpAllocator::getNextUseDistance(const std::string& vr, size_t currentP
     if (it == vrUsages.end()) return std::numeric_limits<int>::max();
     
     auto& usage = it->second;
+    
+    // 检查当前位置是否是最后一个使用位置
+    if (!usage.usePositions.empty() && 
+        usage.usePositions.back() == currentPos) {
+        return 0;
+    }
+    
     auto pos = std::upper_bound(usage.usePositions.begin(), 
                               usage.usePositions.end(), 
                               currentPos);
@@ -83,18 +90,21 @@ int BottomUpAllocator::getNextUseDistance(const std::string& vr, size_t currentP
 
 std::string BottomUpAllocator::ensure(const std::string& vr, 
                                     std::vector<ILOCInstruction>& result,
-                                    size_t currentPos) {
+                                    size_t currentPos,
+                                    const ILOCInstruction& inst) {
     // 如果已经在物理寄存器中,直接返回
     if (regClass.virtualToPhysical.find(vr) != regClass.virtualToPhysical.end()) {
         return regClass.virtualToPhysical[vr];
     }
 
+    // 使用传入指令的行号
+    int currentLine = inst.lineNumber;
+
     // 分配物理寄存器并可能需要从内存加载
-    std::string physReg = allocate(vr, result, currentPos);
+    std::string physReg = allocate(vr, result, currentPos, currentLine);
     
     // 如果需要从内存加载
     if (memoryLoc.find(vr) != memoryLoc.end()) {
-        int currentLine = result.empty() ? 1 : result.back().lineNumber + 1;
         
         // 生成加载地址指令
         ILOCInstruction loadAddr;
@@ -118,15 +128,16 @@ std::string BottomUpAllocator::ensure(const std::string& vr,
 
 std::string BottomUpAllocator::allocate(const std::string& vr, 
                                       std::vector<ILOCInstruction>& result,
-                                      size_t currentPos) {
+                                      size_t currentPos,
+                                      size_t lineNum) {
     std::string allocReg;
     
     // 如果有空闲寄存器,直接分配
     if (!regClass.freeRegs.empty()) {
-        int regIdx = regClass.freeRegs.top();
-        // int regIdx = regClass.getFreeReg();
+        // int regIdx = regClass.freeRegs.top();
+        int regIdx = regClass.getFreeReg();
         allocReg = "r" + std::to_string(regIdx + 1);
-        regClass.freeRegs.pop();
+        // regClass.freeRegs.pop();
     } else {
         // 找到最远使用的寄存器
         int maxDist = -1;
@@ -146,8 +157,7 @@ std::string BottomUpAllocator::allocate(const std::string& vr,
         
         // 溢出到内存
         if (!victimVR.empty()) {
-            spillToMemory(victimVR, allocReg, result, 
-                         result.empty() ? 1 : result.back().lineNumber);
+            spillToMemory(victimVR, allocReg, result, lineNum);
             regClass.virtualToPhysical.erase(victimVR);
         }
     }
@@ -219,16 +229,15 @@ std::vector<ILOCInstruction> BottomUpAllocator::allocate(
         auto inst = instructions[i];
         
         if (!inst.src1.empty()) {
-            inst.src1 = ensure(inst.src1, result, i);
+            inst.src1 = ensure(inst.src1, result, i, inst);
         }
         
         if (!inst.src2.empty()) {
-            inst.src2 = ensure(inst.src2, result, i);
+            inst.src2 = ensure(inst.src2, result, i, inst);
         }
         
         if (!inst.dest.empty()) {
-            // inst.dest = allocate(inst.dest, result, i);
-            inst.dest = ensure(inst.dest, result, i);
+            inst.dest = ensure(inst.dest, result, i, inst);
         }
         
         result.push_back(inst);

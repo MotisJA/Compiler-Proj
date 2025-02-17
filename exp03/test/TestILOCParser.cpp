@@ -51,7 +51,7 @@ void TestILOCParser::testLoad() {
 
 void TestILOCParser::testStore() {
     auto inst = ILOCParser::parseLine("store r1 => r2");
-    assertInstruction(inst, ILOCOpcode::STORE, "r1", "", "r2", 0);
+    assertInstruction(inst, ILOCOpcode::STORE, "r1", "r2", "", 0);
 }
 
 void TestILOCParser::testArithmetic() {

@@ -21,6 +21,7 @@ CompilerProj/
 ├── exp03/                   # 实验三：寄存器分配器
 │   └── exp03.md           # 实验三说明文档
 └── .gitignore              # Git忽略文件配置
+```
 
 ## 环境要求
 
